@@ -1,0 +1,77 @@
+/dts-v1/;
+
+/ {
+	compatible = "ibm,baremetal";
+	model = "HB";
+	#size-cells = < 0x02 >;
+	#address-cells = < 0x02 >;
+
+	/* HRMOR means our memory is really at 0x8000000 but we have *
+	some at 0 for the exception vectors. We could just choose to
+	hide that from the kernel, except there is a bried period
+	where it runs in real-mode using kernel linear (0xc....)
+	addresses which has the unfortunate side effect of bypassing
+	HRMOR. */
+	reserved-names = "invalid-memory";
+	reserved-ranges = < 0x0 0x6000 0x0 0x8000000 >;
+
+	chosen {
+		ibm,architecture-vec-5 = < 0x00 0x800000 >;
+		stdout-path = &uart;
+		bootargs = "console=ttyS0 dhash_entries=1 ihash_entries=1 single";
+	};
+
+	memory@0 {
+		reg = < 0x00 0x00 0x00 0x8a00000 >;
+		ibm,chip-id = < 0x00 >;
+		device_type = "memory";
+	};
+
+	cpus {
+		#size-cells = < 0x00 >;
+		#address-cells = < 0x01 >;
+
+		PowerPC,POWER9@0 {
+			device_type = "cpu";
+			status = "okay";
+			ibm,chip-id = < 0x00 >;
+			ibm,pir = < 0x00 >;
+			timebase-frequency = < 0x1c4fecc0 >;
+			clock-frequency = < 0xe27f6600 >;
+			ibm,segment-page-sizes = < 0x0c 0x00 0x01 0x0c 0x00 0x10 0x110 0x01 0x10 0x01 0x14 0x111 0x01 0x14 0x02 0x18 0x100 0x01 0x18 0x00 0x22 0x120 0x01 0x22 0x03 >;
+			ibm,processor-segment-sizes = < 0x1c 0xffffffff 0xffffffff 0xffffffff >;
+			ibm,pa-features = < 0x4000f63f 0xc70080c0 0x80000000 0x00 0x8000 0x80008000 0x80008000 0x80008000 0x80008000 0xc0008000 0x80008000 0x80008000 0x80008000 0x80008000 0x80008000 0x80008000 0x80000000 0x00 >;
+			i-cache-size = < 0x8000 >;
+			d-cache-size = < 0x8000 >;
+			i-cache-line-size = < 0x80 >;
+			d-cache-line-size = < 0x80 >;
+			ibm,slb-size = < 0x20 >;
+			ibm,vmx = < 0x02 >;
+			reg = < 0x00 >;
+			ibm,ppc-interrupt-server#s = < 0x00 >;
+		};
+	};
+
+	/* Bit 63 needs to be set for IO address to bypass HRMOR */
+	lpcm-opb@8006030000000000 {
+		#address-cells = < 0x01 >;
+		#size-cells = < 0x01 >;
+		compatible = "simple-bus";
+		ibm,chip-id = < 0x00 >;
+		ranges = < 0x00 0x80060300 0x00 0x80000000 0x80000000 0x80060300 0x80000000 0x80000000 >;
+
+		lpc@f0000000 {
+			compatible = "simple-bus";
+			#address-cells = < 0x02 >;
+			#size-cells = < 0x01 >;
+			ranges = < 0x03 0x00 0xf0000000 0x10000000 0x00 0x00 0xe0000000 0x10000000 0x01 0x00 0xd0010000 0x10000 >;
+
+			uart: serial@i3f8 {
+				compatible = "ns16550";
+				reg = < 0x01 0x3f8 0x10 >;
+				current-speed = < 0x1c200 >;
+				clock-frequency = < 0x1c2000 >;
+			};
+		};
+	};
+};
