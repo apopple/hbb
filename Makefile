@@ -1,5 +1,6 @@
 CROSS	?= powerpc64-buildroot-linux-gnu
 CFLAGS	= -g -nostdlib -Iinclude
+CFLAGS += -mcpu=power8 -mbig-endian -m64 -static
 
 all: HBB
 
@@ -7,7 +8,7 @@ head: src/head.S p9.dtb
 	$(CROSS)-gcc $(CFLAGS) -o $@ $<
 
 head.bin: head
-	$(CROSS)-objcopy -O binary $< $@
+	$(CROSS)-objcopy -O binary --only-section=.text $< $@
 
 head.bin.stb: head.bin
 	./sign-with-local-keys.sh $< $@ ./keys HBB
