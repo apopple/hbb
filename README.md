@@ -72,10 +72,14 @@ objcopy -O binary vmlinux.bin
 # Booting
 
 The resulting vmlinux.bin should be copied to the HBI partition so the
-simplified HBB can load it. However due to issues with the vpnor
-implementation this must be copied into the HBI partition of the
-system flash image. The simplest way of doing this is to download an
-existing PNOR image and use pflash (part of
+simplified HBB can load it.
+
+
+## Witherspoon
+
+Ddue to issues with the vpnor implementation vmlinux.bin must be copied into
+the HBI partition of the system flash image. The simplest way of doing this is
+to download an existing PNOR image and use pflash (part of
 https://github.com/open-power/skiboot) to update it like so:
 
 ```
@@ -90,6 +94,22 @@ activated with:
 
 Assuming the HBB file have been copied to `/usr/local/share/pnor` the
 system should now be ready to boot with `obmcutil poweron`.
+
+## Romulus
+
+Romulus does not use vpnor. Replace the HBB and HBI sections:
+
+```
+pflash -e -P HBI -p /tmp/vmlinux.bin
+pflash -e -P HBB -p /tmp/HBB
+```
+
+And initaite a boot:
+
+```
+obmcutil chassison
+openpower-proc-control startHost
+```
 
 # Sample output
 
